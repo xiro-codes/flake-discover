@@ -9,7 +9,7 @@
     {
       lib = discovery;
       templates = {
-        nixos = { path = ./templates/nixos; description = "Template for a complete nixos setup"; };
+        default = { path = ./templates/nixos; description = "Template for a complete nixos setup"; };
       };
     };
 }
