@@ -5,9 +5,12 @@
   outputs = { self, nixpkgs }:
     let
       discovery = import ./lib/discovery.nix;
+      collectors = import ./lib/collectors.nix;
     in
     {
-      lib = discovery;
+      lib = {
+        inherit discovery collectors;
+      };
       templates = {
         default = { path = ./templates/nixos; description = "Template for a complete nixos setup"; };
       };
