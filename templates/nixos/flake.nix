@@ -1,6 +1,6 @@
 {
   description = "NixOS system configuration with flake-discover";
-  input = {
+  inputs = {
     flake-discover.url = "github:xiro-codes/flake-discover";
     home-manager.url = "github:nix-community/home-manager";
   };
