@@ -14,7 +14,7 @@
     {
       inherit (discovered)
         nixosConfigurations
-        homeManagerConfiguration
+        homeConfigurations
         nixosModules
         homeModules
         packages
