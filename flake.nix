@@ -9,7 +9,8 @@
     in
     {
       lib = {
-        inherit discovery collectors;
+        inherit (discovery) discover;
+        inherit collectors;
       };
       templates = {
         default = { path = ./templates/nixos; description = "Template for a complete nixos setup"; };

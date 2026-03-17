@@ -1,4 +1,5 @@
 let
+
   nixosCollectors = nixpkgs: inputs: [
     {
       name = "nixosConfigurations";
@@ -41,7 +42,11 @@ let
       name = "packages";
       path = "packages";
       filter = name: type: type == "directory";
-      transform = path: path;
+      transform = path: nixpkgs.lib.genAttrs [ "x86_64-linux" ] (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        pkgs.callPackage path { inherit inputs; });
     }
   ];
   shellCollectors = nixpkgs: inputs: [
@@ -60,10 +65,21 @@ let
   ];
 in
 {
+  inherit
+    nixosCollectors
+    homeManagerCollectors
+    packageCollectors
+    shellCollectors
+    templateCollectors;
+
   defaultCollectors = nixpkgs: inputs:
     (nixosCollectors nixpkgs inputs) ++
     (homeManagerCollectors nixpkgs inputs) ++
     (packageCollectors nixpkgs inputs) ++
     (shellCollectors nixpkgs inputs) ++
     (templateCollectors nixpkgs inputs);
+
+  mkCollector = foo: bar: {
+    foo = bar;
+  };
 }
