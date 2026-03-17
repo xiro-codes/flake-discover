@@ -33,18 +33,19 @@ in
           let
             basePath = root + "/${c.path}";
             files = if builtins.pathExists basePath then builtins.readDir basePath else { };
+            rawResult = builtins.listToAttrs (builtins.concatLists (builtins.map
+              (name:
+                let
+                  fullPath = basePath + "/${name}";
+                  type = files.${name};
+                in
+                if c.filter name type then
+                  [{ name = builtins.replaceStrings [ ".nix" ] [ "" ] name; value = c.transform fullPath; }]
+                else [ ]
+              )
+              (builtins.attrNames files)));
           in
-          builtins.listToAttrs (builtins.concatLists (builtins.map
-            (name:
-              let
-                fullPath = basePath + "/${name}";
-                type = files.${name};
-              in
-              if c.filter name type then
-                [{ name = builtins.replaceStrings [ ".nix" ] [ "" ] name; value = c.transform fullPath; }]
-              else [ ]
-            )
-            (builtins.attrNames files)));
+          if c ? postProcess then c.postProcess rawResult else rawResult;
       })
       collectors);
 }

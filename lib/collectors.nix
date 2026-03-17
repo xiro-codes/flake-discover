@@ -37,21 +37,45 @@ let
     }
   ];
 
-  packageCollectors = nixpkgs: inputs: [
-    {
-      name = "packages";
-      path = "packages";
-      filter = name: type: type == "directory";
-      transform = path: nixpkgs.lib.genAttrs [ "x86_64-linux" ] (system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-        in
-        pkgs.callPackage path { inherit inputs; });
-    }
-  ];
-  shellCollectors = nixpkgs: inputs: [
-    # TODO
-  ];
+  packageCollectors = nixpkgs: inputs:
+    let
+      supportedSystems = [ "x86_64-linux" ];
+    in
+    [
+      {
+        name = "packages";
+        path = "packages";
+        filter = name: type: type == "directory";
+        transform = path: nixpkgs.lib.genAttrs supportedSystems (system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          pkgs.callPackage path { inherit inputs; });
+        postProcess = result:
+          nixpkgs.lib.genAttrs supportedSystems (system:
+            builtins.mapAttrs (pkgName: sysMap: sysMap.${system}) result);
+      }
+    ];
+  shellCollectors = nixpkgs: inputs:
+    let
+      supportedSystems = [ "x86_64-linux" ];
+    in
+    [
+      {
+        name = "devShells";
+        path = "shells";
+        filter = name: type: type == "directory";
+        transform = path: nixpkgs.lib.genAttrs supportedSystems (system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          pkgs.callPackage path { inherit inputs; });
+        postProcess = result:
+          nixpkgs.lib.genAttrs supportedSystems (system:
+            builtins.mapAttrs (pkgName: sysMap: sysMap.${system}) result);
+      }
+    ];
+
   templateCollectors = nixpkgs: inputs: [
     {
       name = "templates";
@@ -79,7 +103,15 @@ in
     (shellCollectors nixpkgs inputs) ++
     (templateCollectors nixpkgs inputs);
 
-  mkCollector = foo: bar: {
-    foo = bar;
-  };
+  mkCollector =
+    { name
+    , path
+    , filter ? (name: type: type == "directory")
+    , transform ? (path: path)
+    , postProcess ? null
+    }:
+    let
+      base = { inherit name path filter transform; };
+    in
+    if postProcess != null then base // { inherit postProcess; } else base;
 }
